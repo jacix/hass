@@ -1,0 +1,145 @@
+substitutions:
+  dry: "3.05"
+  wet: "1.95"
+  my_update_interval: 60s
+  my_nickname: SG
+# for use with deep sleep
+#  my_update_interval: 25s
+#  awake_time: 1min
+#  snooze_time: 29min
+
+esphome:
+  name: skylightgreenhouse
+  platform: ESP32
+  board: esp32dev
+
+packages:
+  wifi: !include common/wifi.yaml
+
+captive_portal:
+
+#deep_sleep:
+##  run_duration: 1min
+##  sleep_duration: 9min
+#  run_duration: ${awake_time}
+#  sleep_duration: ${snooze_time}
+#  wakeup_pin: GPIO25
+#  wakeup_pin_mode: KEEP_AWAKE
+
+binary_sensor:
+  - platform: gpio
+    pin:
+      number: GPIO25
+      mode: INPUT_PULLUP
+      inverted: true
+    name: "SG water level"
+    device_class: problem
+
+  - platform: status
+    name: "SG connectivity"
+
+# Enable logging
+logger:
+
+# Enable Home Assistant API
+api:
+  password: !secret skylightgreenhouse_api_password
+
+ota:
+  password: !secret skylightgreenhouse_ota_password
+
+time:
+  - platform: homeassistant
+    id: homeassistant_time
+
+# Enable Web server.
+web_server:
+  port: 80
+
+# Exposed switches.
+switch:
+  - platform: restart
+    name: "SG restart"
+
+sensor:
+  - platform: uptime
+    name: "${my_nickname} uptime"
+#   plant1 : farthest, green signal wire
+#   air: 3.14 / water: 1.76 / wet soil: 1.82 / 100% wet on standalone: 2.04
+  - platform: adc
+    pin: GPIO34
+    name: "plant1"
+    unit_of_measurement: "%"
+    attenuation: 11db
+    update_interval: ${my_update_interval}
+    icon: "mdi:water-percent"
+    device_class: "humidity"
+    filters:
+    - lambda: |-
+          if (x > ${dry}) {
+            return 0;
+          } else if (x < ${wet}) {
+            return 100;
+          } else {
+            return (${dry} - x) / (${dry} - ${wet}) * 100.0;
+          }
+#
+#   plant2 : second from end : white->yellow/black signal wire 
+#   air: 3.22V / water: 1.74V / wet soil: 1.93 / 100% wet on standalone: 2.01
+  - platform: adc
+    pin: GPIO35
+    name: "plant2"
+    unit_of_measurement: "%"
+    attenuation: 11db
+    update_interval: ${my_update_interval}
+    icon: "mdi:water-percent"
+    device_class: "humidity"
+    filters:
+    - lambda: |-
+          if (x > ${dry}) {
+            return 0;
+          } else if (x < ${wet}) {
+            return 100;
+          } else {
+            return (${dry} - x) / (${dry} - ${wet}) * 100.0;
+          }
+#
+#   plant3 : third from end : white->green/black signal wire 
+#   air: 3.28V / water: 1.73V / wet soil: 2.05 / 100% wet on standalone: 1.94
+  - platform: adc
+    pin: GPIO32
+    name: "plant3"
+    unit_of_measurement: "%"
+    attenuation: 11db
+    update_interval: ${my_update_interval}
+    icon: "mdi:water-percent"
+    device_class: "humidity"
+    filters:
+    - lambda: |-
+          if (x > ${dry}) {
+            return 0;
+          } else if (x < ${wet}) {
+            return 100;
+          } else {
+            return (${dry} - x) / (${dry} - ${wet}) * 100.0;
+          }
+#
+#   plant4 : single: yellow signal wire
+#   air: 3.28 / water: 1.70 / wet soil: 1.90V / 100% wet on standalone: 1.85
+  - platform: adc
+    pin: GPIO33
+    name: "plant4"
+    unit_of_measurement: "%"
+    attenuation: 11db
+    update_interval: ${my_update_interval}
+    icon: "mdi:water-percent"
+    device_class: "humidity"
+    filters:
+    - lambda: |-
+          if (x > ${dry}) {
+            return 0;
+          } else if (x < ${wet}) {
+            return 100;
+          } else {
+            return (${dry} - x) / (${dry} - ${wet}) * 100.0;
+          }

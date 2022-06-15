@@ -1,0 +1,97 @@
+# $Header: /Users/jason/esphome/RCS/palaundrypower1.yaml,v 1.1 2021/12/01 00:54:02 jason Exp jason $
+#
+# $Log: palaundrypower1.yaml,v $
+# Revision 1.1  2021/12/01 00:54:02  jason
+# Initial revision
+#
+#
+
+substitutions:
+  adc_update_interval: 15s
+  clamp_update_interval: 10s
+  my_nickname: PaLP1
+  my_name: palaundrypower1
+  clamp_sample_duration: 167ms
+
+# for use with deep sleep
+#  my_update_interval: 25s
+#  awake_time: 1min
+#  snooze_time: 9min
+
+esphome:
+  name: ${my_name}
+  comment: "PA laundry power meter"
+  platform: ESP32
+  board: esp32dev
+
+#esp32:
+#  board: esp32dev
+#  framework:
+#    type: arduino
+    #version: recommended
+#  sdkconfig_options:
+#    CONFIG_COMPILER_OPTIMIZATION_SIZE: y
+
+
+packages:
+  wifi: !include common/wifi.yaml
+  device_base: !include common/common.yaml
+
+captive_portal:
+
+#deep_sleep:
+##  run_duration: 1min
+##  sleep_duration: 9min
+#  run_duration: ${awake_time}
+#  sleep_duration: ${snooze_time}
+#  wakeup_pin: GPIO25
+#  wakeup_pin_mode: KEEP_AWAKE
+
+# Enable logging
+logger:
+
+# Enable Home Assistant API
+api:
+  password: !secret palaundrypower1_api_password
+
+ota:
+  password: !secret palaundrypower1_ota_password
+
+sensor:
+# washer
+  - platform: adc
+    pin: GPIO33
+    id: washer_sensor
+    attenuation: auto
+    update_interval: ${adc_update_interval}
+
+  - platform: ct_clamp
+    sensor: washer_sensor
+    name: "washer amps"
+    update_interval: ${clamp_update_interval}
+    sample_duration: ${clamp_sample_duration}
+    filters:
+      - calibrate_linear:
+          - 0.00 -> 0.00
+          - 0.215 -> 11.10
+# dryer
+  - platform: adc
+    pin: GPIO35 
+    id: dryer_sensor
+    attenuation: auto
+    update_interval: ${adc_update_interval}
+
+  - platform: ct_clamp
+    sensor: dryer_sensor
+    name: "dryer amps"
+    update_interval: ${clamp_update_interval}
+    sample_duration: ${clamp_sample_duration}
+    filters:
+#      - calibrate_linear:
+      - calibrate_polynomial:
+          degree: 2
+          datapoints:
+          - 0.00 -> 0.00
+          - 0.105 -> 5.75
+          - 0.215 -> 11.10
+

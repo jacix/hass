@@ -1,0 +1,79 @@
+# $Header: /Users/jason/esphome/RCS/dishwasherpower1.yaml,v 1.2 2021/11/11 19:25:31 jason Exp jason $
+#
+# $Log: dishwasherpower1.yaml,v $
+# Revision 1.2  2021/11/11 19:25:31  jason
+# updated to new format with esp32 section; moved common things to common.yaml; calibrate_polynomial to calibrate_linear; added sensor update_interval; added attenuation to adc sensor
+#
+
+substitutions:
+  my_update_interval: 5s
+  my_nickname: DWP1
+  my_name: dishwasherpower1
+
+# for use with deep sleep
+#  my_update_interval: 25s
+#  awake_time: 1min
+#  snooze_time: 9min
+
+esphome:
+  name: ${my_name}
+  comment: "dishwasher power meter"
+  platform: ESP32
+  board: esp32dev
+
+#esp32:
+#  board: esp32dev
+#  framework:
+#    type: arduino
+    #version: recommended
+#  sdkconfig_options:
+#    CONFIG_COMPILER_OPTIMIZATION_SIZE: y
+
+
+packages:
+  wifi: !include common/wifi.yaml
+  device_base: !include common/common.yaml
+
+captive_portal:
+
+#deep_sleep:
+##  run_duration: 1min
+##  sleep_duration: 9min
+#  run_duration: ${awake_time}
+#  sleep_duration: ${snooze_time}
+#  wakeup_pin: GPIO25
+#  wakeup_pin_mode: KEEP_AWAKE
+
+# Enable logging
+logger:
+
+# Enable Home Assistant API
+api:
+  password: !secret dishwasherpower1_api_password
+
+ota:
+  password: !secret dishwasherpower1_ota_password
+
+sensor:
+  - platform: adc
+    pin: GPIO35
+    id: adc_sensor
+    attenuation: 11db
+    update_interval: ${my_update_interval}
+
+  - platform: ct_clamp
+    sensor: adc_sensor
+    name: "AC amps"
+#    sample_duration: 333ms
+    update_interval: ${my_update_interval}
+    filters:
+      - calibrate_linear:
+          - 0.0 -> 0.0
+          - 0.47 -> 11.09
+#      - calibrate_polynomial:
+#          degree: 2
+#          datapoints:
+#          - 0.00 -> 0.00
+#          - 0.11 -> 2.68
+#          - 0.30 -> 5.78
+#          - 0.47 -> 11.09
