@@ -1,3 +1,5 @@
+# $Id: skylightgreenhouse.yaml,v 1.1 2022/06/22 03:26:57 jason Exp jason $
+#
 substitutions:
   dry: "3.05"
   wet: "1.95"
@@ -32,7 +34,7 @@ binary_sensor:
       number: GPIO25
       mode: INPUT_PULLUP
       inverted: true
-    name: "SG water level"
+    name: "SG water low"
     device_class: problem
 
   - platform: status
@@ -51,6 +53,14 @@ ota:
 time:
   - platform: homeassistant
     id: homeassistant_time
+
+# enable i2c for temperature sensor - 2022-06-21
+i2c:
+  id: bus_a
+  sda: 21
+  scl: 22
+  scan: true
+
 
 # Enable Web server.
 web_server:
@@ -143,3 +153,14 @@ sensor:
           } else {
             return (${dry} - x) / (${dry} - ${wet}) * 100.0;
           }
+
+# added 2022-06-21
+  - platform: tmp102
+    name: "${my_nickname} temperature"
+    update_interval: ${my_update_interval}
+    unit_of_measurement: "°F"
+    device_class: "temperature"
+    state_class: "measurement"
+    accuracy_decimals: 1
+    filters:
+      - lambda: return x* (9.0/5.0) + 32.0;
