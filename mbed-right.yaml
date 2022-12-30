@@ -1,0 +1,84 @@
+# $Id$
+#
+# $Log$
+#
+
+substitutions:
+  my_update_interval: 5s
+  my_nickname: MBedR
+  my_name: mbed-right
+
+# for use with deep sleep
+#  my_update_interval: 25s
+#  awake_time: 1min
+#  snooze_time: 9min
+
+esphome:
+  name: ${my_name}
+  comment: "main bedroom bed - right side"
+  platform: ESP32
+  board: esp32dev
+
+
+packages:
+  wifi: !include common/wifi.yaml
+  device_base: !include common/common.yaml
+
+captive_portal:
+
+#deep_sleep:
+##  run_duration: 1min
+##  sleep_duration: 9min
+#  run_duration: ${awake_time}
+#  sleep_duration: ${snooze_time}
+#  wakeup_pin: GPIO25
+#  wakeup_pin_mode: KEEP_AWAKE
+
+# Enable logging
+logger:
+
+# Enable Home Assistant API
+api:
+  password: !secret mbedright_api_password
+
+ota:
+  password: !secret mbedright_ota_password
+
+sensor:
+  - platform: adc
+    pin: GPIO32
+    name: "power on"
+    #unit_of_measurement: "%"
+    #attenuation: auto
+    update_interval: ${my_update_interval}
+    icon: "mdi:bed"
+    device_class: "power"
+    accuracy_decimals: 2
+#    filters:
+#    - lambda: |-
+#          if (x > ${dry}) {
+#            return 0;
+#          } else if (x < ${wet}) {
+#            return 100;
+#          } else {
+#            return (${dry} - x) / (${dry} - ${wet}) * 100.0;
+#          }
+
+# virtual switch to indicate whether the warmer is on
+#switch:
+#  - platform: output
+#    name: "Right bed warmer"
+#    output: 'adc_sensor'
+
+# switch to turn on the warmer
+switch:
+  - platform: gpio
+    name: "RightRelay"
+    pin: 
+      number: GPIO16
+      inverted: true
+    id: right
+    restore_mode: ALWAYS_OFF
+    on_turn_on:
+    - delay: 650ms
+    - switch.turn_off: right
