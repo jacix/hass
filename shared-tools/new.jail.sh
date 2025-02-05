@@ -6,6 +6,7 @@
 #            - update .cshrc only if it doesn't start bash already
 #            - install only missing packages 
 #            - enable firewall in /etc/rc.conf if it's not already done
+#            - consider: sysrc firewall_enable="YES"  ; sysrc firewall_type="open"
 ##########################################################################
 pkg update
 #ASSUME_ALWAYS_YES=yes; pkg install bash vim binutils wget openssh-portable sudo
